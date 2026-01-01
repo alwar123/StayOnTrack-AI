@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('dashboard') }}" class="text-decoration-none text-muted">&larr; Back to Dashboard</a>
+</div>
+
+<div class="row">
+    <!-- Student Details -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="bg-light rounded-circle p-3 d-inline-block mb-3">
+                        <span class="h2">👤</span>
+                    </div>
+
+                    <!-- Editable Name Area -->
+                    <div class="mb-2">
+                        <h3 class="fw-bold d-inline align-middle">{{ student.name }}</h3>
+                        <a href="#nameEditCollapse" data-bs-toggle="collapse"
+                            class="text-muted ms-2 small text-decoration-none">
+                            ✏️
+                        </a>
+                    </div>
+
+                    <div class="collapse mt-2" id="nameEditCollapse">
+                        <form action="{{ url_for('update_student_name', student_id=student.id) }}" method="POST"
+                            class="d-flex justify-content-center gap-2">
+                            <input type="text" name="new_name" class="form-control form-control-sm w-auto"
+                                value="{{ student.name }}" required>
+                            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                        </form>
+                    </div>
+
+                    <p class="text-muted">Student ID: #{{ student.id }}</p>
+                </div>
+
+                <hr>
+
+                <h6 class="fw-bold mb-3">Academic Data</h6>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Study Hours</span>
+                        <span class="fw-medium">{{ student.study_hours }} hrs/week</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Attendance</span>
+                        <span class="fw-medium">{{ student.attendance }}%</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Assignment Avg</span>
+                        <span class="fw-medium">{{ student.assignment_score }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Recent Test</span>
+                        <span class="fw-medium">{{ student.test2 }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Report -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow border-0 h-100">
+            <div
+                class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold m-0 w-100">🤖 AI Performance Analysis</h5>
+                <form action="{{ url_for('regenerate_prediction', student_id=student.id) }}" method="POST">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">🔄 Regenerate</button>
+                </form>
+            </div>
+            <div class="card-body p-4">
+                {% if student.report %}
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-light text-center h-100">
+                            <small class="text-muted text-uppercase fw-bold">Predicted Grade</small>
+                            <div class="display-3 fw-bold text-primary my-2">{{ student.report.predicted_grade }}</div>
+                            <span class="badge bg-primary">Final Exam Est.</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        {% set risk = student.report.dropout_risk %}
+                        {% if risk == 'High Risk' %}
+                        {% set risk_class = 'danger' %}
+                        {% set bg_class = 'bg-soft-danger' %}
+                        {% elif risk == 'Medium Risk' %}
+                        {% set risk_class = 'warning' %}
+                        {% set bg_class = 'bg-soft-warning' %}
+                        {% else %}
+                        {% set risk_class = 'success' %}
+                        {% set bg_class = 'bg-soft-success' %}
+                        {% endif %}
+
+                        <div class="p-3 rounded-3 {{ bg_class }} text-center h-100 border border-{{ risk_class }}">
+                            <small class="text-{{ risk_class }} text-uppercase fw-bold">Dropout Risk</small>
+                            <div class="display-6 fw-bold text-{{ risk_class }} my-3">{{ risk }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 bg-soft-primary">
+                    <h5 class="alert-heading fw-bold mb-2">💡 Recommendation</h5>
+                    <p class="mb-0">{{ student.report.recommendation }}</p>
+                </div>
+
+                <div class="text-end mt-3">
+                    <small class="text-muted">Report Generated: {{ student.report.generated_at.strftime('%Y-%m-%d
+                        %H:%M:%S') }}</small>
+                </div>
+
+                {% else %}
+                <div class="text-center py-5">
+                    <h4 class="text-muted">No report generated yet.</h4>
+                    <form action="{{ url_for('regenerate_prediction', student_id=student.id) }}" method="POST">
+                        <button type="submit" class="btn btn-primary mt-3">Generate First Report</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

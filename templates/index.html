@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Student Performance Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container py-5">
+    <h1 class="text-center mb-4">🎓 AI Student Performance Dashboard</h1>
+
+    <div class="card p-4 shadow-lg mb-4">
+      <form action="/" method="post" enctype="multipart/form-data" class="text-center">
+        <p class="lead">Upload your student data CSV (with columns like <b>StudyHours, AssignmentScore, Attendance, ExamScore</b>)</p>
+        <input type="file" name="file" class="form-control mb-3" required>
+        <button type="submit" class="btn btn-primary btn-lg">📈 Predict Grades</button>
+      </form>
+    </div>
+
+    {% if tables %}
+    <div class="results-section mt-5">
+      <h3 class="text-center mb-3">📊 Prediction Results</h3>
+      {% for table in tables %}
+      <div class="table-responsive">
+        {{ table|safe }}
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if report_file %}
+    <div class="text-center mt-4">
+      <a href="{{ url_for('download', filename=report_file) }}" class="btn btn-success btn-lg">⬇️ Download Report</a>
+    </div>
+    {% endif %}
+
+    <div class="charts-section mt-5">
+      <h3 class="text-center mb-4">📈 Performance Insights</h3>
+      <div class="row">
+        <div class="col-md-6 mb-4">
+          <div class="chart-card p-3 shadow-sm">
+            <canvas id="gradeChart"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6 mb-4">
+          <div class="chart-card p-3 shadow-sm">
+            <canvas id="riskChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card p-3 shadow-sm">
+        <canvas id="correlationChart"></canvas>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <footer class="text-center mt-5 mb-3">
+    <p>Powered by Advanced ML Algorithms</p>
+  </footer>
+
+  <script>
+    {% if chart_data %}
+    const data = JSON.parse('{{ chart_data|safe }}');
+
+    // Grade Distribution
+    new Chart(document.getElementById("gradeChart"), {
+      type: "bar",
+      data: {
+        labels: Object.keys(data.grades),
+        datasets: [{
+          label: "Predicted Grades",
+          data: Object.values(data.grades),
+          backgroundColor: ["#007bff","#28a745","#ffc107","#dc3545","#17a2b8"]
+        }]
+      }
+    });
+
+    // Risk Distribution
+    new Chart(document.getElementById("riskChart"), {
+      type: "pie",
+      data: {
+        labels: Object.keys(data.risks),
+        datasets: [{
+          data: Object.values(data.risks),
+          backgroundColor: ["#28a745","#ffc107","#dc3545"]
+        }]
+      }
+    });
+
+    // Correlation Heatmap (Simplified Bubble Chart)
+    const corrLabels = Object.keys(data.correlations);
+    const corrValues = Object.values(data.correlations).map(c => Object.values(c));
+    new Chart(document.getElementById("correlationChart"), {
+      type: "radar",
+      data: {
+        labels: corrLabels,
+        datasets: [{
+          label: "Feature Correlation",
+          data: corrValues.map(v => v.reduce((a,b)=>a+b,0)/v.length),
+          backgroundColor: "rgba(0,123,255,0.3)",
+          borderColor: "#007bff"
+        }]
+      }
+    });
+    {% endif %}
+  </script>
+</body>
+</html>

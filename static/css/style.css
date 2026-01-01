@@ -1,0 +1,113 @@
+:root {
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+}
+
+html {
+    font-size: 16px;
+    /* Base size */
+}
+
+@media (min-width: 1400px) {
+    html {
+        font-size: 18px;
+    }
+}
+
+@media (min-width: 2000px) {
+    html {
+        font-size: 24px;
+        /* Significant scaling for 4K+ */
+    }
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    color: #334155;
+    background-color: #1e1e2f;
+    /* Darker background for contrast if needed, or keep light */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make inputs larger */
+.form-control-lg {
+    font-size: 1.25rem;
+    padding: 1rem 1.5rem;
+}
+
+.btn-lg {
+    font-size: 1.25rem;
+    padding: 0.8rem 1.5rem;
+}
+
+.bg-primary-gradient {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* Custom Soft Backgrounds for Badges/Alerts */
+.bg-soft-primary {
+    background-color: #e0e7ff;
+    color: #4338ca;
+}
+
+.bg-soft-success {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.bg-soft-warning {
+    background-color: #fef9c3;
+    color: #a16207;
+}
+
+.bg-soft-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.bg-gradient-voice {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Table Styling */
+.table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    border-bottom-width: 1px;
+}
+
+/* Logo Zoom */
+.hover-zoom {
+    transition: transform 0.3s ease;
+    cursor: zoom-in;
+}
+
+.hover-zoom:hover {
+    transform: scale(1.5);
+    /* Scale up significantly on hover */
+    z-index: 1050;
+    position: relative;
+}

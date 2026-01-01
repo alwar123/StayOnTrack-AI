@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <a href="{{ url_for('dashboard') }}" class="text-decoration-none text-muted small mb-2 d-inline-block">←
+                Back to Dashboard</a>
+            <h2 class="fw-bold mb-0">{{ batch.name }}</h2>
+            <p class="text-muted mb-0 small">Created on: {{ batch.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('download_batch_csv', batch_id=batch.id) }}"
+                class="btn btn-success text-white shadow-sm">
+                <span></span> Download Report
+            </a>
+
+            <a href="mailto:?subject=Student Report - {{ batch.name }}&body=Report Summary for {{ batch.name }}:%0D%0A%0D%0AHigh Risk: {{ risk_counts.get('High Risk', 0) }}%0D%0AMedium Risk: {{ risk_counts.get('Medium Risk', 0) }}%0D%0ALow Risk: {{ risk_counts.get('Low Risk', 0) }}%0D%0A%0D%0APlease attach the downloaded CSV report to this email for full details."
+                class="btn btn-info text-white shadow-sm">
+                <span></span> Share
+            </a>
+
+            <form action="{{ url_for('delete_batch', batch_id=batch.id) }}" method="POST"
+                onsubmit="return confirm('Delete entire report batch? This cannot be undone.');">
+                <button type="submit" class="btn btn-outline-danger">Delete Batch</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 mb-2 bg-gradient-voice h-100">
+                <h6 class="text-muted text-uppercase mb-2">Class Risk Profile</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="fw-bold text-danger mb-0">{{ risk_counts.get('High Risk', 0) }}</h2>
+                        <small class="text-danger fw-medium">High Risk Students</small>
+                    </div>
+                    <div style="width: 200px; height: 100px;">
+                        <canvas id="miniRiskChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table -->
+    <div class="card shadow border-0 rounded-4">
+        <div class="card-header bg-white border-bottom-0 py-3 d-flex justify-content-between align-items-center pe-4">
+            <h5 class="mb-0 fw-bold ps-4">Student List</h5>
+            <div class="d-flex align-items-center">
+                <span class="me-2 text-muted small fw-bold">Sort By:</span>
+                <select class="form-select form-select-sm border-2" id="sortSelect" onchange="sortStudents()"
+                    style="width: 200px;">
+                    <option value="name">Name (A-Z)</option>
+                    <option value="grade_high">Grade (High to Low)</option>
+                    <option value="grade_low">Grade (Low to High)</option>
+                    <option value="risk">Risk Level (Highest First)</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3">Student Name</th>
+                            <th>Predicted Grade</th>
+                            <th>Risk Level</th>
+                            <th>Analysis Date & Time</th>
+                            <th class="text-end pe-4">Report</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in batch.students %}
+                        <tr>
+                            <td class="ps-4 fw-medium">{{ student.name }}</td>
+                            <td>
+                                {% if student.report %}
+                                <span class="badge bg-soft-primary text-primary">{{ student.report.predicted_grade
+                                    }}</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if student.report %}
+                                {% if student.report.dropout_risk == 'High Risk' %}
+                                <span class="badge bg-soft-danger text-danger">High Risk</span>
+                                {% elif student.report.dropout_risk == 'Medium Risk' %}
+                                <span class="badge bg-soft-warning text-warning">Medium Risk</span>
+                                {% else %}
+                                <span class="badge bg-soft-success text-success">Low Risk</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">
+                                {% if student.report %}
+                                {{ student.report.generated_at.strftime('%d %b %Y, %I:%M %p') }}
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('student_detail', student_id=student.id) }}"
+                                        class="btn btn-sm btn-outline-primary rounded-pill px-3">View Insights</a>
+                                    <form action="{{ url_for('delete_student', student_id=student.id) }}" method="POST"
+                                        onsubmit="return confirm('Are you sure you want to delete this record?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"
+                                            title="Delete Record">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted">
+                                    <p>No students in this batch.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    // Simple bar chart for distribution
+    const ctx = document.getElementById('miniRiskChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                datasets: [{
+                    label: 'Risk Distribution',
+                    data: [
+                        {{ risk_counts.get('Low Risk', 0) }},
+                {{ risk_counts.get('Medium Risk', 0) }},
+                        {{ risk_counts.get('High Risk', 0) }}
+                    ],
+    backgroundColor: ['#d1fae5', '#fef3c7', '#fee2e2'],
+        borderColor: ['#10b981', '#f59e0b', '#ef4444'],
+            borderWidth: 1
+                }]
+            },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+        scales: { y: { display: false }, x: { grid: { display: false } } }
+    }
+        });
+    }
+
+    // Sorting Logic
+    function sortStudents() {
+        const tbody = document.querySelector('table tbody');
+        const rows = Array.from(tbody.rows);
+        const criterion = document.getElementById('sortSelect').value;
+
+        const gradeWeight = { 'A+': 100, 'A': 90, 'B+': 85, 'B': 80, 'C': 70, 'D': 60, 'F': 50, '-': 0 };
+        const riskWeight = { 'High Risk': 3, 'Medium Risk': 2, 'Low Risk': 1, 'Pending': 0 };
+
+        rows.sort((a, b) => {
+            let valA, valB;
+
+            if (criterion === 'name') {
+                valA = a.cells[0].innerText.trim().toLowerCase();
+                valB = b.cells[0].innerText.trim().toLowerCase();
+                return valA.localeCompare(valB);
+            }
+
+            if (criterion.startsWith('grade')) {
+                valA = gradeWeight[a.cells[1].innerText.trim()] || 0;
+                valB = gradeWeight[b.cells[1].innerText.trim()] || 0;
+                return criterion === 'grade_high' ? valB - valA : valA - valB;
+            }
+
+            if (criterion === 'risk') {
+                valA = riskWeight[a.cells[2].innerText.trim()] || 0;
+                valB = riskWeight[b.cells[2].innerText.trim()] || 0;
+                return valB - valA;
+            }
+            return 0;
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+{% endblock %}

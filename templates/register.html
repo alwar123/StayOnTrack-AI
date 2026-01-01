@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center vh-80">
+    <div class="col-10 col-md-8 col-lg-6 col-xl-5">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-primary">Create Account</h2>
+                    <p class="text-muted">Join the AI Teacher Platform</p>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Choose Username</label>
+                        <input type="text" name="username" class="form-control form-control-lg"
+                            placeholder="e.g. teacher_jane" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Choose Password</label>
+                        <input type="password" name="password" class="form-control form-control-lg"
+                            placeholder="Minimum 6 characters" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">Sign Up</button>
+                    </div>
+                </form>
+                <div class="mt-4 text-center">
+                    <p class="text-muted">Already have an account? <a href="{{ url_for('login') }}"
+                            class="text-primary fw-bold text-decoration-none">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
